@@ -17,7 +17,7 @@ services:
     build: ./backend
     environment:
       DATABASE_URL: postgresql+psycopg://demo:demo_password@postgres:5432/drone_demo
-      CORS_ORIGINS: http://localhost:8080,http://127.0.0.1:8080
+      CORS_ORIGINS: http://localhost:6001,http://127.0.0.1:6001
     depends_on:
       postgres:
         condition: service_healthy
@@ -30,7 +30,7 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "8080:80"
+      - "0.0.0.0:6001:80"
     depends_on:
       backend:
         condition: service_healthy

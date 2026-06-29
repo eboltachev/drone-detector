@@ -13,7 +13,7 @@ docker compose up --build -d
 Веб-интерфейс будет доступен по адресу:
 
 ```text
-http://localhost:8080
+http://localhost:6001
 ```
 
 Остановка и очистка томов:
