@@ -1,2 +1,2 @@
-import { Incident, AudioEvent, Sensor } from '../api/client';
-export default function StatusBar({sensors,events,incident}:{sensors:Sensor[];events:AudioEvent[];incident?:Incident}){return <header className="status"><b>DEMO / synthetic data</b><span>Сенсоры: {sensors.length}</span><span>Аудио-события: {events.length}</span><span>Confidence: {Math.round((incident?.confidence||0)*100)}%</span><span>Тип: {incident?.predicted_type||'unknown'}</span><span className="pill">{incident?.status||'Ожидание'}</span></header>}
+import { Incident, AudioEvent } from '../api/client';
+export default function StatusBar({events,incident}:{events:AudioEvent[];incident?:Incident}){return <header className="status"><b>DEMO / synthetic data</b><span>Аудио-сообщения: {events.length}</span><span>Confidence: {Math.round((incident?.confidence||0)*100)}%</span><span>Тип: {incident?.predicted_type||'unknown'}</span><span className="pill">{incident?.status||'Ожидание'}</span></header>}

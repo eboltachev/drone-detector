@@ -9,7 +9,7 @@ from ..routers.events import create
 from ..seed import refresh_incident
 from ..services.bus import publish
 router=APIRouter(prefix="/api/scenario", tags=["scenario"])
-SCENARIO=[(2,55.739,37.575,58,"medium","транспорт"),(4,55.744,37.589,70,"good","похоже на БПЛА"),(6,55.750,37.604,76,"good","мотор"),(8,55.756,37.621,82,"good","похоже на БПЛА"),(10,55.762,37.637,74,"medium","мотор"),(12,55.768,37.651,67,"low","похоже на БПЛА")]
+SCENARIO=[(1,56.8350,60.5840,58,"medium","транспорт"),(2,56.8408,60.5960,70,"good","похоже на БПЛА"),(3,56.8460,60.6070,76,"good","мотор"),(4,56.8518,60.6192,82,"good","похоже на БПЛА"),(5,56.8580,60.6310,74,"medium","мотор"),(6,56.8638,60.6425,67,"low","похоже на БПЛА")]
 async def run_scenario():
     for item in SCENARIO:
         await asyncio.sleep(1.3)

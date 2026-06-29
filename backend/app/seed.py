@@ -3,7 +3,7 @@ from .models import Sensor, AudioEvent, Incident
 from .services.ml_simulator import classify
 from .services.fusion import build_hypothesis, encode_points
 
-SENSORS = [("Сенсор А-01",55.751,37.602),("Сенсор А-02",55.759,37.617),("Сенсор А-03",55.744,37.629),("Сенсор А-04",55.735,37.606),("Сенсор А-05",55.766,37.591),("Сенсор А-06",55.728,37.642),("Сенсор А-07",55.773,37.636),("Сенсор А-08",55.748,37.573),("Сенсор А-09",55.731,37.581),("Сенсор А-10",55.762,37.659),("Сенсор А-11",55.719,37.619),("Сенсор А-12",55.781,37.608)]
+SENSORS = [("Точка сообщения 01",56.835,60.584),("Точка сообщения 02",56.841,60.596),("Точка сообщения 03",56.846,60.607),("Точка сообщения 04",56.852,60.619),("Точка сообщения 05",56.858,60.631),("Точка сообщения 06",56.864,60.642)]
 
 def seed(db):
     if db.query(Sensor).count() == 0:
@@ -13,7 +13,7 @@ def seed(db):
     if db.query(Incident).count() == 0:
         db.add(Incident(status="Ожидание")); db.commit()
     if db.query(AudioEvent).count() == 0:
-        samples=[(1,55.742,37.585,64,"medium","ветер"),(3,55.748,37.598,72,"good","похоже на БПЛА"),(5,55.755,37.613,78,"good","мотор")]
+        samples=[(1,56.8348,60.5839,64,"medium","ветер"),(2,56.8412,60.5964,72,"good","похоже на БПЛА"),(3,56.8466,60.6072,78,"good","мотор")]
         for idx,s in enumerate(samples):
             ml=classify(s[5],s[3],s[4])
             db.add(AudioEvent(sensor_id=s[0],lat=s[1],lon=s[2],signal_level=s[3],noise_quality=s[4],source_noise_type=s[5],timestamp=datetime.now(timezone.utc)-timedelta(minutes=8-idx*2),**ml))
