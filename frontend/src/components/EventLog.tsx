@@ -1,0 +1,2 @@
+import { AudioEvent } from '../api/client';
+export default function EventLog({events}:{events:AudioEvent[]}){return <section className="log"><h3>Журнал аудио-событий</h3><div className="rows">{events.map(e=><div className="row" key={e.id}><span>#{e.id}</span><span>S-{e.sensor_id}</span><span>{new Date(e.timestamp).toLocaleTimeString()}</span><span>{e.source_noise_type}</span><span>{e.predicted_class}</span><b>{Math.round(e.confidence*100)}%</b></div>)}</div></section>}
