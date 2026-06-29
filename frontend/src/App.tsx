@@ -1,0 +1,4 @@
+import { useEffect, useState } from 'react';
+import { api, AudioEvent, Incident } from './api/client';
+import MapView from './components/MapView'; import StatusBar from './components/StatusBar'; import EventLog from './components/EventLog'; import IncidentPanel from './components/IncidentPanel';
+export default function App(){const [events,setEvents]=useState<AudioEvent[]>([]),[incident,setIncident]=useState<Incident>(); const load=()=>Promise.all([api.events(),api.incident()]).then(([e,i])=>{setEvents(e);setIncident(i)}); useEffect(()=>{load(); const es=new EventSource('/api/stream'); es.onmessage=()=>load(); return()=>es.close()},[]); return <><StatusBar events={events} incident={incident}/><main><MapView events={events} incident={incident}/><IncidentPanel incident={incident} onStart={()=>api.start()} onReset={()=>api.reset().then(load)}/></main><EventLog events={events}/></>}
