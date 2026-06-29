@@ -1,0 +1,1 @@
+export default function Legend(){return <div className="legend"><b>Легенда</b><span><i className="dot good"/> хорошее сообщение</span><span><i className="dot medium"/> среднее качество</span><span><i className="dot low"/> низкое качество</span><p>Точки строятся рядом с местами сообщений. Все данные синтетические.</p></div>}
