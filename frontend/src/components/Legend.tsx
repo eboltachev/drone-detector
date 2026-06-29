@@ -1,0 +1,1 @@
+export default function Legend(){return <div className="legend"><b>Легенда</b><span><i className="dot sensor"/> сенсор</span><span><i className="dot good"/> хорошая запись</span><span><i className="dot medium"/> средняя</span><span><i className="dot low"/> низкая</span><p>Все координаты, записи и траектории синтетические.</p></div>}
