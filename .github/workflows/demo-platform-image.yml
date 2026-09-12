@@ -1,0 +1,125 @@
+name: Demo Platform image
+
+on:
+  push:
+    branches:
+      - main
+      - feat/demo-platform-corex
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE: ghcr.io/eboltachev/drone-detector-demo
+
+jobs:
+  build-test-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build image
+        run: |
+          set -Eeuo pipefail
+          docker build \
+            --file deploy/Dockerfile.demo \
+            --tag drone-detector-demo:test \
+            .
+
+      - name: Test Demo Platform security envelope
+        run: |
+          set -Eeuo pipefail
+          cleanup() {
+            docker rm --force drone-detector-demo-test >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+
+          docker run --detach \
+            --name drone-detector-demo-test \
+            --user 101 \
+            --read-only \
+            --cap-drop ALL \
+            --security-opt no-new-privileges:true \
+            --pids-limit 64 \
+            --memory 64m \
+            --cpus 0.25 \
+            --tmpfs /tmp:size=16m,mode=1777 \
+            --publish 127.0.0.1:18080:8080 \
+            drone-detector-demo:test
+
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent --show-error \
+              http://127.0.0.1:18080/api/health \
+              > /tmp/health.json; then
+              break
+            fi
+            if ! docker inspect --format '{{.State.Running}}' \
+              drone-detector-demo-test | grep -Fxq true; then
+              docker logs drone-detector-demo-test
+              exit 1
+            fi
+            sleep 1
+          done
+
+          grep -Fq '"status":"ok"' /tmp/health.json
+          grep -Fq '"mode":"DEMO synthetic data only"' /tmp/health.json
+
+          curl --fail --silent --show-error http://127.0.0.1:18080/ \
+            > /tmp/index.html
+          grep -Fq '<base href="/drone-detector/">' /tmp/index.html
+          grep -Fq 'href="styles.css"' /tmp/index.html
+          grep -Fq 'src="app.js"' /tmp/index.html
+
+          curl --fail --silent --show-error http://127.0.0.1:18080/app.js \
+            > /tmp/app.js
+          grep -Fq "j('api/events')" /tmp/app.js
+          grep -Fq "new EventSource('api/stream')" /tmp/app.js
+          if grep -Fq "'/api/" /tmp/app.js; then
+            echo 'absolute API path remains in app.js' >&2
+            exit 1
+          fi
+
+          test "$(docker inspect --format '{{.State.OOMKilled}}' \
+            drone-detector-demo-test)" = false
+          docker logs drone-detector-demo-test
+
+      - name: Authenticate to GHCR
+        if: github.event_name != 'pull_request'
+        run: |
+          set -Eeuo pipefail
+          printf '%s' "${{ secrets.GITHUB_TOKEN }}" | \
+            docker login ghcr.io --username "${{ github.actor }}" --password-stdin
+
+      - name: Push immutable source-SHA tag
+        if: github.event_name != 'pull_request'
+        id: push
+        run: |
+          set -Eeuo pipefail
+          ref="${IMAGE}:${GITHUB_SHA}"
+          docker tag drone-detector-demo:test "$ref"
+          docker push "$ref" | tee /tmp/push.log
+          digest="$(sed -n 's/^.*digest: \(sha256:[0-9a-f]\{64\}\).*$/\1/p' \
+            /tmp/push.log | tail -n 1)"
+          test -n "$digest"
+          immutable="${IMAGE}@${digest}"
+          printf 'image_ref=%s\n' "$immutable" >> "$GITHUB_OUTPUT"
+          {
+            echo '### Demo Platform image'
+            echo
+            echo '`'"$immutable"'`'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Verify pushed digest
+        if: github.event_name != 'pull_request'
+        run: |
+          set -Eeuo pipefail
+          docker pull "${{ steps.push.outputs.image_ref }}"
+          test "$(docker image inspect --format '{{.Id}}' \
+            '${{ steps.push.outputs.image_ref }}')" = \
+            "$(docker image inspect --format '{{.Id}}' drone-detector-demo:test)"
