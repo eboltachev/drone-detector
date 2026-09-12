@@ -1,0 +1,27 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    DATABASE_URL="sqlite:////tmp/drone_demo.db?check_same_thread=false" \
+    CORS_ORIGINS="https://demo.corex.systems"
+
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends wget \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY backend/requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt \
+    && rm -f /tmp/requirements.txt
+
+COPY backend/app /app/app
+COPY frontend/static /app/static
+COPY deploy/demo_app.py /app/demo_app.py
+COPY deploy/prepare_static.py /tmp/prepare_static.py
+RUN python /tmp/prepare_static.py \
+    && rm -f /tmp/prepare_static.py
+
+EXPOSE 8080
+
+CMD ["uvicorn", "demo_app:app", "--host", "0.0.0.0", "--port", "8080", "--workers", "1"]
