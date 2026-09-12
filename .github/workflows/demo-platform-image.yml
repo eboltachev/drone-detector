@@ -3,6 +3,7 @@ name: Demo Platform image
 on:
   push:
     branches:
+      - main
       - feat/demo-platform-corex
   pull_request:
     branches:
