@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - feat/demo-platform-corex
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -86,12 +89,14 @@ jobs:
           docker logs drone-detector-demo-test
 
       - name: Authenticate to GHCR
+        if: github.event_name != 'pull_request'
         run: |
           set -Eeuo pipefail
           printf '%s' "${{ secrets.GITHUB_TOKEN }}" | \
             docker login ghcr.io --username "${{ github.actor }}" --password-stdin
 
       - name: Push immutable source-SHA tag
+        if: github.event_name != 'pull_request'
         id: push
         run: |
           set -Eeuo pipefail
@@ -103,7 +108,6 @@ jobs:
           test -n "$digest"
           immutable="${IMAGE}@${digest}"
           printf 'image_ref=%s\n' "$immutable" >> "$GITHUB_OUTPUT"
-          printf '%s\n' "$immutable" > image-ref.txt
           {
             echo '### Demo Platform image'
             echo
@@ -111,6 +115,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Verify pushed digest
+        if: github.event_name != 'pull_request'
         run: |
           set -Eeuo pipefail
           docker pull "${{ steps.push.outputs.image_ref }}"
